@@ -52,7 +52,7 @@ def index():
     # Fetch the most recent 10 access times from Datastore.
     times = fetch_times(10)
 
-    return render_template('index.html', time=times)
+    return render_template('index.html', times=times)
 
 
 if __name__ == '__main__':
