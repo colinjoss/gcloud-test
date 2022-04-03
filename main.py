@@ -15,17 +15,44 @@
 # [START gae_python38_app]
 # [START gae_python3_app]
 from flask import Flask, render_template, url_for
+from google.cloud import datastore
+import datetime
 
+datastore_client = datastore.Client()
 
 # If `entrypoint` is not defined in app.yaml, App Engine will look for an app
 # called `app` in `main.py`.
 app = Flask(__name__)
 
 
+def store_time(dt):
+    entity = datastore.Entity(key=datastore_client.key('visit'))
+    entity.update({
+        'timestamp': dt
+    })
+
+    datastore_client.put(entity)
+
+
+def fetch_times(limit):
+    query = datastore_client.query(kind='visit')
+    query.order = ['-timestamp']
+
+    times = query.fetch(limit=limit)
+
+    return times
+
+
 @app.route('/')
 def index():
     """Return a friendly HTTP greeting."""
-    return render_template('index.html')
+    # Store the current access time in Datastore.
+    store_time(datetime.datetime.now(tz=datetime.timezone.utc))
+
+    # Fetch the most recent 10 access times from Datastore.
+    times = fetch_times(10)
+
+    return render_template('index.html', times=times)
 
 
 if __name__ == '__main__':
